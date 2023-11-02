@@ -1,41 +1,41 @@
 from flask import Flask, request, jsonify
 import requests
 import fuzzywuzzy.fuzz as fuzz
+import os
+
 
 app = Flask(__name__)
 
-# URL de la API de Universal Tutorial
-# API_URL = "https://www.universal-tutorial.com/api"
-# HEADERS = {
-#     "Authorization": "Bearer Your-API-Token-Here",  # Reemplaza con tu token de API
-#     "Accept": "application/json"
-# }
+API_AUTH_TOKEN = os.environ.get('API_AUTH_TOKEN')
 
-# API_AUTH_TOKEN="mEcC78R7ujOPMZ2dpyVy9C_esbdu6VUVFvAwVC2QQ2n3CC1el-EHyR1f7xnst8G3f3g"
+'''
+Use and invoke this function to get the bearer token to use in the API.
+
+headers = {
+    "Accept": "application/json",
+    "api-token": f'{API_AUTH_TOKEN}',
+    "user-email": "everalso23@gmail.com"
+  }
+
+def get_auth_token(url, headers):
+    token_auth_request= requests.get(url, headers=headers)
+    print(token_auth_request.status_code)
+    print(token_auth_request.json())
+    with open ('token.txt', 'w') as f:
+        f.write(token_auth_request.json()['auth_token'])
+        print('token auth generated succesfully')'''
 
 
+GET_AUTH_TOKEN_URL = os.environ.get('GET_AUTH_TOKEN_URL')
 
-# headers = {
-#     "Accept": "application/json",
-#     "api-token": f'{API_AUTH_TOKEN}',
-#     "user-email": "everalso23@gmail.com"
-#   }
+'''get_auth_token(GET_AUTH_TOKEN_URL, headers)'''
 
-# def get_auth_token(url, headers):
-#     token_auth_request= requests.get(url, headers=headers)
-#     print(token_auth_request.status_code)
-#     print(token_auth_request.json())
-#     with open ('token.txt', 'w') as f:
-#         f.write(token_auth_request.json()['auth_token'])
-#         print('token auth generated succesfully')
-
-# get_auth_token('https://www.universal-tutorial.com/api/getaccesstoken', headers)
-
-@app.route('/buscar_paises', methods=['GET'])
+@app.route('/search_countries', methods=['GET'])
 def buscar_paises():
-    API_URL = "https://www.universal-tutorial.com/api"
+    BEARER_TOKEN_OBTAINED = os.environ.get('BEARER_TOKEN_OBTAINED')
+    API_URL = os.getenv('API_URL')
     HEADERS = {
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7InVzZXJfZW1haWwiOiJldmVyYWxzbzIzQGdtYWlsLmNvbSIsImFwaV90b2tlbiI6Im1FY0M3OFI3dWpPUE1aMmRweVZ5OUNfZXNiZHU2VlVWRnZBd1ZDMlFRMm4zQ0MxZWwtRUh5UjFmN3huc3Q4RzNmM2cifSwiZXhwIjoxNjk5MDQyODQ4fQ.d3h7FjgDjnFFfduCXNQ8aHllf0wcMQcSuKjAVtOa2rg',
+        'Authorization': f'Bearer {BEARER_TOKEN_OBTAINED}',
          'Accept': "application/json"
     }
     print('--> URL API', API_URL)
@@ -57,8 +57,8 @@ def buscar_paises():
             if similarity_ratio >= 80:
                 matching_countries.append({
                     "nombre": country['country_name'],
-                    "codigo_pais": country['country_short_name'],
-                    "codigo_telefonico": country['country_phone_code']
+                    "country_code": country['country_short_name'],
+                    "phone_code": country['country_phone_code']
                 })
 
             if search_text.lower() == country['country_name'].lower():
@@ -68,15 +68,15 @@ def buscar_paises():
                 exact_match_regions = [{"region": region['state_name']} for region in regions]
 
         if matching_countries:
-            return jsonify({"paises": matching_countries})
+            return jsonify({"Countries": matching_countries})
 
         if exact_match_regions:
-            return jsonify({"regiones": exact_match_regions})
+            return jsonify({"regions": exact_match_regions})
 
-        return jsonify({"message": "No se encontraron coincidencias."}), 404
+        return jsonify({"message": "No coincidence."}), 404
 
     except Exception as e:
-        return jsonify({"error": f"Error al buscar países y regiones: {str(e)}"}), 500
+        return jsonify({"error": f"Error looking countries and regions: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
